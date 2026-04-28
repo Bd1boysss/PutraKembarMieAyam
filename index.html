@@ -312,6 +312,7 @@ const MENU=[
   {id:10,nama:'Mie Ayam Bakso + Tetelan',harga:18000,kat:'mieayam'},
   {id:11,nama:'Es Teh / Teh Panas',harga:3000,kat:'minuman'},
   {id:12,nama:'Es Jeruk / Jeruk Panas',harga:4000,kat:'minuman'},
+  {id:13,nama:'Rambak / Kerupuk',harga:500,kat:'lainnya'},
 ];
 const PIN_BENAR='1234';
 const fmt=n=>'Rp '+Math.round(n).toLocaleString('id-ID');
@@ -335,7 +336,7 @@ function gantiHalaman(id,tab){
 }
 
 function renderMenu(){
-  const kats=[{key:'mieayam',label:'Mie Ayam'},{key:'bakso',label:'Bakso'},{key:'minuman',label:'Minuman'}];
+  const kats=[{key:'mieayam',label:'Mie Ayam'},{key:'bakso',label:'Bakso'},{key:'minuman',label:'Minuman'},{key:'lainnya',label:'Lainnya'}];
   document.getElementById('menu-grid').innerHTML=kats.map(kat=>`<div class="menu-section-title">${kat.label}</div>`+MENU.filter(m=>m.kat===kat.key).map(item=>`<div class="menu-item" id="mi-${item.id}" onclick="tambahMenu(${item.id})"><div class="item-nama">${item.nama}</div><div class="item-harga">${fmt(item.harga)}</div></div>`).join('')).join('');
 }
 
