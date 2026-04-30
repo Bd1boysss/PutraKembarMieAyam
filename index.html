@@ -300,7 +300,7 @@ tr:hover td{background:#FAFAFA;}
   s1.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
   s1.onload=function(){
     var s2=document.createElement('script');
-    s2.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js';
+    s2.src='https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js';
     s2.onload=initApp;
     document.head.appendChild(s2);
   };
@@ -338,19 +338,24 @@ function initApp(){
   firebase.initializeApp({
     apiKey:"AIzaSyBeQEhUGSouXMfi1iG9aEvAdObQZWBjS-Y",
     authDomain:"putra-kembar.firebaseapp.com",
+    databaseURL:"https://putra-kembar-default-rtdb.asia-southeast1.firebasedatabase.app",
     projectId:"putra-kembar",
     storageBucket:"putra-kembar.firebasestorage.app",
     messagingSenderId:"923655376120",
     appId:"1:923655376120:web:50c7f75418e09015c9ff0d"
   });
-  db=firebase.firestore();
+  db=firebase.database();
   sd('ld');
-  db.collection('transaksi').orderBy('id','desc').onSnapshot(function(s){
-    TX=s.docs.map(function(d){var x=d.data();x._id=d.id;return x;});
+  db.ref('transaksi').on('value',function(snap){
+    var val=snap.val()||{};
+    TX=Object.entries(val).map(function(e){var x=e[1];x._id=e[0];return x;});
+    TX.sort(function(a,b){return b.id-a.id;});
     rrw();if(ownerOn)ud();sd('ok');
   },function(){sd('err');});
-  db.collection('pengeluaran').orderBy('id','desc').onSnapshot(function(s){
-    OUT=s.docs.map(function(d){var x=d.data();x._id=d.id;return x;});
+  db.ref('pengeluaran').on('value',function(snap){
+    var val=snap.val()||{};
+    OUT=Object.entries(val).map(function(e){var x=e[1];x._id=e[0];return x;});
+    OUT.sort(function(a,b){return b.id-a.id;});
     if(ownerOn)ud();
   });
 }
@@ -418,7 +423,6 @@ function hk(){
   else{kg.style.display='none';bb.disabled=true;}
 }
 function bayar(){
-  if(!db){notif('⚠ Belum terhubung ke database, tunggu sebentar');return;}
   var tot=krj.reduce(function(s,k){return s+k.h*k.q;},0);
   var by=parseInt(document.getElementById('bayar').value)||0;
   var cat=document.getElementById('cat').value.trim();
@@ -426,7 +430,7 @@ function bayar(){
   var tx={id:Date.now(),tanggal:now.toISOString().slice(0,10),jam:now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),items:JSON.parse(JSON.stringify(krj)),total:tot,bayar:by,kembali:by-tot,catatan:cat};
   document.getElementById('bbyr').disabled=true;
   sd('ld');
-  db.collection('transaksi').add(tx).then(function(){sd('ok');ss(tx);}).catch(function(e){sd('err');document.getElementById('bbyr').disabled=false;notif('⚠ Gagal simpan, cek koneksi internet');console.error(e);});
+  db.ref('transaksi').push(tx).then(function(){sd('ok');ss(tx);}).catch(function(e){sd('err');document.getElementById('bbyr').disabled=false;notif('⚠ Gagal simpan, cek koneksi');console.error(e);});
 }
 function ss(tx){
   var df=new Date(tx.tanggal+'T12:00:00').toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -555,14 +559,14 @@ function rc3(){
 
 // PENGELUARAN
 function ap(){
-  if(!db){notif('⚠ Belum terhubung ke database');return;}
   var k=document.getElementById('pk').value.trim();var n=parseInt(document.getElementById('pn').value);
   if(!k||!n||n<=0){notif('⚠ Isi keterangan dan nominal');return;}
-  db.collection('pengeluaran').add({id:Date.now(),tanggal:tgl(),jam:jam(),keterangan:k,nominal:n}).then(function(){
+  if(!db){notif('⚠ Belum terhubung, tunggu beberapa detik lalu coba lagi');return;}
+  db.ref('pengeluaran').push({id:Date.now(),tanggal:tgl(),jam:jam(),keterangan:k,nominal:n}).then(function(){
     document.getElementById('pk').value='';document.getElementById('pn').value='';notif('✓ Pengeluaran '+f(n)+' dicatat');
   }).catch(function(){notif('⚠ Gagal simpan');});
 }
-function hp(id){db.collection('pengeluaran').doc(id).delete().then(function(){notif('Pengeluaran dihapus');}).catch(function(){notif('⚠ Gagal hapus');});}
+function hp(id){db.ref('pengeluaran/'+id).remove().then(function(){notif('Pengeluaran dihapus');}).catch(function(){notif('⚠ Gagal hapus');});}
 function rkl(){
   var data=gdout();var el=document.getElementById('kl2');
   if(!data.length){el.innerHTML='<div style="color:#aaa;font-size:.78rem;padding:.6rem 0">Belum ada pengeluaran</div>';return;}
@@ -575,8 +579,8 @@ function rkl(){
 function kr2(){document.getElementById('ov-r').classList.add('on');}
 function cr2(){document.getElementById('ov-r').classList.remove('on');}
 function dr(){
-  var p1=db.collection('transaksi').get().then(function(s){return Promise.all(s.docs.map(function(d){return db.collection('transaksi').doc(d.id).delete();}));});
-  var p2=db.collection('pengeluaran').get().then(function(s){return Promise.all(s.docs.map(function(d){return db.collection('pengeluaran').doc(d.id).delete();}));});
+  var p1=db.ref('transaksi').remove();
+  var p2=db.ref('pengeluaran').remove();
   Promise.all([p1,p2]).then(function(){cr2();notif('✓ Semua data dihapus');}).catch(function(){notif('⚠ Gagal reset');});
 }
 
