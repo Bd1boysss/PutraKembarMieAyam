@@ -184,7 +184,7 @@ tr:hover td{background:#FAFAFA;}
         <div class="tr"><span>Subtotal</span><span id="sub">Rp 0</span></div>
         <div class="tr big"><span>TOTAL</span><span id="tot">Rp 0</span></div>
         <textarea class="inp" id="cat" rows="2" placeholder="Catatan: pedas, tanpa kuah..."></textarea>
-        <input class="inp" type="tel" id="bayar" placeholder="Uang diterima (Rp)" oninput="hk()" onkeyup="hk()" onchange="hk()" inputmode="numeric" pattern="[0-9]*">
+        <input class="inp" type="text" id="bayar" placeholder="Uang diterima (Rp)" oninput="hk()" onkeyup="hk()" onchange="hk()" onclick="hk()" inputmode="numeric" pattern="[0-9]*" style="font-size:1.1rem;letter-spacing:1px">
         <div class="kbg" id="kbg"></div>
         <button class="btn btn-red" id="bbyr" onclick="bayar()">Bayar Sekarang</button>
         <button class="btn btn-out" onclick="batal()">Batalkan</button>
@@ -604,6 +604,19 @@ function dr(){
   var p2=db.ref('pengeluaran').remove();
   Promise.all([p1,p2]).then(function(){cr2();notif('✓ Semua data dihapus');}).catch(function(){notif('⚠ Gagal reset');});
 }
+
+// ── INTERVAL WATCHER untuk Android lama ──
+// Cek input bayar setiap 300ms tanpa bergantung event handler
+var _lastBayarVal = '';
+setInterval(function(){
+  var el = document.getElementById('bayar');
+  if(!el) return;
+  var val = el.value;
+  if(val !== _lastBayarVal){
+    _lastBayarVal = val;
+    hk();
+  }
+}, 300);
 
 // ── INIT (dipanggil terakhir setelah semua fungsi siap) ──
 rm();
