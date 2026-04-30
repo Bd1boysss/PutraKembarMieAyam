@@ -183,7 +183,7 @@ tr:hover td{background:#FAFAFA;}
         <div class="tr"><span>Subtotal</span><span id="sub">Rp 0</span></div>
         <div class="tr big"><span>TOTAL</span><span id="tot">Rp 0</span></div>
         <textarea class="inp" id="cat" rows="2" placeholder="Catatan: pedas, tanpa kuah..."></textarea>
-        <input class="inp" type="number" id="bayar" placeholder="Uang diterima (Rp)" oninput="hk()" inputmode="numeric">
+        <input class="inp" type="tel" id="bayar" placeholder="Uang diterima (Rp)" oninput="hk()" onkeyup="hk()" onchange="hk()" inputmode="numeric" pattern="[0-9]*">
         <div class="kbg" id="kbg"></div>
         <button class="btn btn-red" id="bbyr" onclick="bayar()" disabled>Bayar Sekarang</button>
         <button class="btn btn-out" onclick="batal()">Batalkan</button>
@@ -417,14 +417,15 @@ function rk(){
 }
 function hk(){
   var tot=krj.reduce(function(s,k){return s+k.h*k.q;},0);
-  var by=parseInt(document.getElementById('bayar').value)||0;
+  var raw=document.getElementById('bayar').value.replace(/[^0-9]/g,'');
+  var by=raw?parseInt(raw):0;
   var kg=document.getElementById('kbg');var bb=document.getElementById('bbyr');
   if(by>=tot&&tot>0){kg.style.display='block';kg.textContent='Kembalian: '+f(by-tot);bb.disabled=false;}
   else{kg.style.display='none';bb.disabled=true;}
 }
 function bayar(){
   var tot=krj.reduce(function(s,k){return s+k.h*k.q;},0);
-  var by=parseInt(document.getElementById('bayar').value)||0;
+  var raw2=document.getElementById('bayar').value.replace(/[^0-9]/g,'');var by=raw2?parseInt(raw2):0;
   var cat=document.getElementById('cat').value.trim();
   var now=new Date();
   var tx={id:Date.now(),tanggal:now.toISOString().slice(0,10),jam:now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),items:JSON.parse(JSON.stringify(krj)),total:tot,bayar:by,kembali:by-tot,catatan:cat};
