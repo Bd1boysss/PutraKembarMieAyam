@@ -66,6 +66,7 @@ textarea.inp{resize:none;font-size:.82rem;padding:8px 12px;}
 .btn{width:100%;padding:13px;border-radius:10px;border:none;font-size:.95rem;font-weight:700;font-family:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent;}
 .btn-red{background:var(--m);color:#fff;}.btn-red:active{background:var(--mg);}
 .btn-red:disabled{background:#ccc;cursor:not-allowed;}
+.btn-red.off{background:#ccc;cursor:not-allowed;pointer-events:none;opacity:0.7;}
 .btn-out{background:transparent;color:#888;border:1px solid #ddd;margin-top:5px;font-size:.83rem;}
 
 /* FILTER */
@@ -185,7 +186,7 @@ tr:hover td{background:#FAFAFA;}
         <textarea class="inp" id="cat" rows="2" placeholder="Catatan: pedas, tanpa kuah..."></textarea>
         <input class="inp" type="tel" id="bayar" placeholder="Uang diterima (Rp)" oninput="hk()" onkeyup="hk()" onchange="hk()" inputmode="numeric" pattern="[0-9]*">
         <div class="kbg" id="kbg"></div>
-        <button class="btn btn-red" id="bbyr" onclick="bayar()" disabled>Bayar Sekarang</button>
+        <button class="btn btn-red" id="bbyr" onclick="bayar()">Bayar Sekarang</button>
         <button class="btn btn-out" onclick="batal()">Batalkan</button>
       </div>
     </div>
@@ -413,23 +414,42 @@ function rk(){
   isi.innerHTML=html;
   document.getElementById('sub').textContent=f(tot);
   document.getElementById('tot').textContent=f(tot);
-  ft.style.display='block';hk();
+  ft.style.display='block';
+  var bb2=document.getElementById('bbyr');bb2.classList.add('off');bb2.disabled=true;bb2.style.background='#ccc';bb2.style.opacity='0.7';bb2.style.pointerEvents='none';
+  hk();
 }
 function hk(){
   var tot=krj.reduce(function(s,k){return s+k.h*k.q;},0);
   var raw=document.getElementById('bayar').value.replace(/[^0-9]/g,'');
   var by=raw?parseInt(raw):0;
-  var kg=document.getElementById('kbg');var bb=document.getElementById('bbyr');
-  if(by>=tot&&tot>0){kg.style.display='block';kg.textContent='Kembalian: '+f(by-tot);bb.disabled=false;}
-  else{kg.style.display='none';bb.disabled=true;}
+  var kg=document.getElementById('kbg');
+  var bb=document.getElementById('bbyr');
+  if(by>=tot&&tot>0){
+    kg.style.display='block';
+    kg.textContent='Kembalian: '+f(by-tot);
+    bb.classList.remove('off');
+    bb.disabled=false;
+    bb.style.background='';
+    bb.style.opacity='';
+    bb.style.pointerEvents='';
+  } else {
+    kg.style.display='none';
+    bb.classList.add('off');
+    bb.disabled=true;
+    bb.style.background='#ccc';
+    bb.style.opacity='0.7';
+    bb.style.pointerEvents='none';
+  }
 }
 function bayar(){
   var tot=krj.reduce(function(s,k){return s+k.h*k.q;},0);
-  var raw2=document.getElementById('bayar').value.replace(/[^0-9]/g,'');var by=raw2?parseInt(raw2):0;
+  var raw2=document.getElementById('bayar').value.replace(/[^0-9]/g,'');
+  var by=raw2?parseInt(raw2):0;
+  if(by<tot||tot===0){notif('⚠ Uang kurang dari total');return;}
   var cat=document.getElementById('cat').value.trim();
   var now=new Date();
   var tx={id:Date.now(),tanggal:now.toISOString().slice(0,10),jam:now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),items:JSON.parse(JSON.stringify(krj)),total:tot,bayar:by,kembali:by-tot,catatan:cat};
-  document.getElementById('bbyr').disabled=true;
+  var bts=document.getElementById('bbyr');bts.disabled=true;bts.classList.add('off');bts.style.background='#ccc';bts.style.opacity='0.7';bts.style.pointerEvents='none';
   sd('ld');
   db.ref('transaksi').push(tx).then(function(){sd('ok');ss(tx);}).catch(function(e){sd('err');document.getElementById('bbyr').disabled=false;notif('⚠ Gagal simpan, cek koneksi');console.error(e);});
 }
@@ -451,7 +471,7 @@ function ts(){
   document.getElementById('cat').value='';
   document.getElementById('bayar').value='';
   document.getElementById('kbg').style.display='none';
-  document.getElementById('bbyr').disabled=true;
+  var bts=document.getElementById('bbyr');bts.disabled=true;bts.classList.add('off');bts.style.background='#ccc';bts.style.opacity='0.7';bts.style.pointerEvents='none';
   rk();uh();notif('✓ Transaksi berhasil disimpan');
 }
 
